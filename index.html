@@ -8,25 +8,25 @@
 	<meta name="author" content="Pablo Gil Torres">
 	<meta name="viewport" content="width=device-width">
 	
-	
-	<style>
-		html, body {height: 100%}
-		#mapContainer {height: 95%; width: 100%}
-	</style>
-	
-</head>
-<body>
+	<link rel="stylesheet/less" href="css/style.less">
+	<script src="dev/less-1.3.0.min.js"></script>
 
-	<div id="mapContainer"></div>
+</head>
+<body data-section="wizard" data-step="one">
+
+	<div id="mapContainer">
+	</div>
+	<div id="timeline">
+	</div>
 
 	<input type="text" name="location" id="location" />
 	
 	<input type="submit" id="submit" value='claculate'  />
 	
 
-	<script type="text/javascript"
-      src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDxcnQUlWPeGOXIa_3X3-FDaYOw_Iuhidg&sensor=false">
-    </script>
-	<script src="PC.js"></script>	
+	<script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDxcnQUlWPeGOXIa_3X3-FDaYOw_Iuhidg&sensor=false"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js"></script>
+	<script src="js/mediator.js"></script>
+	<script src="js/PC.js"></script>	
 </body>
 </html>

@@ -1,5 +1,72 @@
+var PC = {};
 
-var PC = (function(PC, window, document, undefined){
+PC.core = (function(core, $, undefined){
+	
+	var section,
+	step
+	;
+	
+	var wizardManager = function(){
+		
+		mediator.on('mapInitialised', function(){
+			//PC.wizard.init();
+		});
+		if(PC.mapManager){
+			var map = {
+				element : $('#mapContainer')[0],
+				options : {
+					center: new google.maps.LatLng(-34.397, 150.644),
+					zoom: 8,
+					mapTypeId: google.maps.MapTypeId.ROADMAP
+				}
+			},
+			directions = {
+				options : {draggable : true}
+			};
+			PC.mapManager.init({map : map, directions : directions});
+		}
+	};
+	
+	var init = function(){
+		var mapping = {
+			wizard : wizardManager
+		};
+	
+		$(document).ready(function(){
+			section = $('body').data('section');
+			step = $('body').data('step');
+			
+			mapping[section]();
+			
+		});
+	}();
+	
+	return core;
+
+})(PC.core || {}, jQuery);
+
+PC.mapManager = (function(mapManager, $, undefined){
+
+	var map,
+	directionsDisplay,
+	directionsService,
+	geocoder
+	;
+	
+	mapManager.init = function(config){
+		map = new google.maps.Map(config.map.element, config.map.options);
+		directionsDisplay = new google.maps.DirectionsRenderer(config.directions.options);
+		directionsService = new google.maps.DirectionsService();
+		geocoder = new google.maps.Geocoder();
+		
+		if (mediator){ mediator.publish('mapInitialised');}
+	};
+	
+	return mapManager;
+
+})(PC.mapManager || {}, jQuery);
+
+/*	
 	
 	var myOptions = {
           center: new google.maps.LatLng(-34.397, 150.644),
@@ -33,7 +100,7 @@ var PC = (function(PC, window, document, undefined){
 			} else {
 				console.log("Geocode was not successful for the following reason: " + status);
 			}
-		});*/
+		});
 		locations.push(this.value);
 		this.value='';
 		console.log(locations);
@@ -55,4 +122,4 @@ var PC = (function(PC, window, document, undefined){
 	
 	return PC;
 	
-})(PC || {}, window, document);
+})(PC || {}, window, document); */
