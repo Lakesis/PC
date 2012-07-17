@@ -103,22 +103,22 @@ PC.mapManager = (function(mapManager, $, undefined){
 	;
 	
 	var loadBars = function(pubs){
-		var closure = function(i){
-			return function(){ return i};
+		var getLocationFromAddress = function(){
+			return function(i){ 
+				geocoder.geocode( { 'address': pubs[i].address}, function(results, status) {
+					if (status == google.maps.GeocoderStatus.OK) {
+						 pubs[i].latlng = results[0].geometry.location; 
+					} else {
+						console.log("Geocode was not successful for the following reason: " + status);
+					}
+				});
+			};
 		}();
 			
-		for (var i=0, l = pubs.length; i<l; i++){	
+		for (var i=0, l = pubs.length; i<l; i++){
 			
+			getLocationFromAddress(i);	
 			
-			geocoder.geocode( { 'address': pubs[i].address}, function(results, status) {
-			console.log(closure(i));
-				if (status == google.maps.GeocoderStatus.OK) {
-					 pubs[closure(i)].latlng = results[0].geometry.location; 
-
-				} else {
-					console.log("Geocode was not successful for the following reason: " + status);
-				}
-			});
 			var marker = new google.maps.Marker({
 				position: pubs[i].latlng,
 				map: map
