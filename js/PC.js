@@ -31,10 +31,10 @@ PC.core = (function(core, $, undefined){
 		];
 		
 		mediator.on('mapInitialised', function(){
-			//PC.wizard.init();
+			 PC.wizard.init();
 		});
 		mediator.on('addPub', function(data){
-			var id = data[0].get('id'),
+			var id = data[0],
 			newPub = true;
 			if(pubs[id]){
 				for(var i=0, l = pubCrawl.length; i<l; i++){
@@ -42,9 +42,29 @@ PC.core = (function(core, $, undefined){
 				}
 				if (newPub) pubCrawl.push(pubs[id]);
 			}
+			PC.mapManager.route({pubCrawl:pubCrawl, travelMode : 'WALKING'});
+			PC.wizard.updateTimeline(pubCrawl);
+		});
+		mediator.on('deletePub', function(data){
+			for(var i=0, l = pubCrawl.length; i<l; i++){
+					if(pubCrawl[i].id === data[0]) pubCrawl.splice(i,1) 
+				}
+			PC.mapManager.route({pubCrawl:pubCrawl, travelMode : 'WALKING'});
+			PC.wizard.updateTimeline(pubCrawl);
+		});
+		mediator.on('modifyPubCrawl', function(data){
+			pubCrawl = [];
+			var list = data[0];
+			for(var i=0, l=list.length; i<l; i++){ 
+				pubCrawl.push(pubs[list[i]]);
+			}
 			
 			PC.mapManager.route({pubCrawl:pubCrawl, travelMode : 'WALKING'});
-			//PC.wizard.updatePubCrawl(pubCrawl);
+			PC.wizard.updateTimeline(pubCrawl);
+		});
+		mediator.on('displayPubDetails', function(data){
+			var id = data[0];
+			PC.wizard.displayPubDetails(pubs[id]);
 		});
 		if(PC.mapManager){
 			var map = {
@@ -103,33 +123,29 @@ PC.mapManager = (function(mapManager, $, undefined){
 	;
 	
 	var loadBars = function(pubs){
-		var getLocationFromAddress = function(){
-			return function(i){ 
-				geocoder.geocode( { 'address': pubs[i].address}, function(results, status) {
-					if (status == google.maps.GeocoderStatus.OK) {
-						 pubs[i].latlng = results[0].geometry.location; 
-					} else {
-						console.log("Geocode was not successful for the following reason: " + status);
-					}
-				});
-			};
-		}();
-			
+		var getLocationFromAddress = function(i){
+			geocoder.geocode( { 'address': pubs[i].address}, function(results, status) {
+				if (status == google.maps.GeocoderStatus.OK) {
+					 pubs[i].latlng = results[0].geometry.location; 
+				} else {
+					console.log("Geocode was not successful for the following reason: " + status);
+				}
+			});
+		};
 		for (var i=0, l = pubs.length; i<l; i++){
 			
 			getLocationFromAddress(i);	
-			
 			var marker = new google.maps.Marker({
 				position: pubs[i].latlng,
 				map: map
 			});
 			marker.set('id', pubs[i].id);
 			google.maps.event.addListener(marker,'click', function() {
-				if (mediator) mediator.publish('displayPubDetails',this);
+				if (mediator) mediator.publish('displayPubDetails',this.get('id'));
 				else console.log('mediator is missing');
 			});
 			google.maps.event.addListener(marker,'dblclick', function() {
-				if (mediator) mediator.publish('addPub',this);
+				if (mediator) mediator.publish('addPub',this.get('id'));
 				else console.log('mediator is missing');
 			});
 			google.maps.event.addListener(marker, 'mouseover', function() {
@@ -171,7 +187,7 @@ PC.mapManager = (function(mapManager, $, undefined){
 			travelMode :  google.maps.TravelMode[config.travelMode]
 		};
 		
-		if(config.pubCrawl){
+		if(config.pubCrawl.length > 1){ 
 			request.origin = config.pubCrawl[0].address;
 			request.destination = config.pubCrawl[config.pubCrawl.length-1].address;
 			request.waypoints = [];
@@ -183,36 +199,101 @@ PC.mapManager = (function(mapManager, $, undefined){
 			}
 			directionsService.route(request, function(response, status) {
 				if (status == google.maps.DirectionsStatus.OK) {
-				  directionsDisplay.setDirections(response);
+					directionsDisplay.setMap(map);	
+					directionsDisplay.setDirections(response);
+				  // Handle distances
 				}
 			});
-			
-		} else console.log('Pub Crawl object is empty')
+		} else {
+			directionsDisplay.setMap(null);		
+		}
 	};
 	
 	return mapManager;
 
 })(PC.mapManager || {}, jQuery);
 
-/*	
-	
 
-
+PC.wizard = (function(wizard, $, undefined){
 	
-    
-	var address = document.getElementById("location");
-	address.onblur = function(){
-		console.log(this.value);
-	/*	geocoder.geocode( { 'address': address.value}, function(results, status) {
-			if (status == google.maps.GeocoderStatus.OK) {
-				locations.push({location: results[0].geometry.location} )
-			} else {
-				console.log("Geocode was not successful for the following reason: " + status);
-			}
+	var $timeline,
+	$sidePanel
+	;
+	
+	var controlSidePanel = function(control){
+		var mode = {
+			toggle : function(){
+				if($sidePanel.is(':visible'))  $sidePanel.hide("blind", { direction: "right" });
+				else $sidePanel.show("blind", { direction: "left" });
+			},
+			open : function(){
+				if(!$sidePanel.is(':visible'))  $sidePanel.show("blind", { direction: "right" });
+			},
+			close : function(){
+				if($sidePanel.is(':visible'))  $sidePanel.hide("blind", { direction: "right" });
+			},
+		};
+		mode[control]();
+	};
+	
+	wizard.init = function(){
+		$timeline = $('#timeline');
+		$sidePanel = $('#sidePanel');
+		var $timeList = $timeline.find('ul');
+		$timeList.sortable();
+		
+		$('a.closePanel').click(function(e){
+			e.preventDefault();
+			$sidePanel.data('id','');
+			controlSidePanel('close');
 		});
-		locations.push(this.value);
-		this.value='';
-		console.log(locations);
-	}
+		$('a.addPub').click(function(e){
+			e.preventDefault()
+			var pubId = $sidePanel.data('id');
+			if (mediator) mediator.publish('addPub',pubId);
+			else console.log('mediator is missing');
+		});
+		$(document).on("click","a.deletePub", function(e){
+			e.preventDefault();
+			if (mediator) mediator.publish('deletePub',$(this).parent().data('id'));
+			else console.log('mediator is missing');
+		});
+		$(document).on("click","span.pubName", function(e){
+			e.preventDefault();
+			if (mediator) mediator.publish('displayPubDetails',$(this).parent().data('id'));
+			else console.log('mediator is missing');
+		});
+		$timeList.on('sortstop', function(e){
+			var idList = [];
+			$(this).find('li').each(function(i,el){
+				idList.push($(el).data('id'));
+			});
+			if (mediator){ mediator.publish('modifyPubCrawl', idList);}
+			else console.log('mediator is missing');
+		});
+		
+		if (mediator){ mediator.publish('wizardInitialised');}
+		else console.log('mediator is missing');
+	};
 	
-*/
+	wizard.displayPubDetails = function(pub){
+		$sidePanel.find('#pubName').text(pub.name).end().find('#pubAddress').text(pub.address);
+		$sidePanel.data('id',pub.id);
+		controlSidePanel('open');
+	};
+	
+	wizard.updateTimeline = function(pubCrawl){
+		var	$target = $timeline.find('ul').html(''),
+		$item = $('<li><a href="" class="deletePub">X</a><span class="pubName"></span></li>'),
+		aux
+		;
+		for(var i=0, l=pubCrawl.length; i<l; i++){ 
+			aux = $item.clone();
+			aux.data('id',pubCrawl[i].id).find('.pubName').text(pubCrawl[i].name);
+			$target.append(aux);
+		}
+	};
+
+	return wizard;
+
+})(PC.wizard || {}, jQuery);
