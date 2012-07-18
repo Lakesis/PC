@@ -92,7 +92,7 @@ PC.core = (function(core, $, undefined){
 				}
 			}
 			
-			PC.mapManager.init({map : map, directions : directions, pubs : pubs});
+			PC.mapManager.init({mode:'wizard',map : map, directions : directions, pubs : pubs});
 		}
 	};
 	
@@ -119,7 +119,8 @@ PC.mapManager = (function(mapManager, $, undefined){
 	var map,
 	directionsDisplay,
 	directionsService,
-	geocoder
+	geocoder,
+	markers = []
 	;
 	
 	var loadBars = function(pubs){
@@ -140,6 +141,7 @@ PC.mapManager = (function(mapManager, $, undefined){
 				map: map
 			});
 			marker.set('id', pubs[i].id);
+			markers[pubs[i].id] = marker;
 			google.maps.event.addListener(marker,'click', function() {
 				if (mediator) mediator.publish('displayPubDetails',this.get('id'));
 				else console.log('mediator is missing');
@@ -154,6 +156,18 @@ PC.mapManager = (function(mapManager, $, undefined){
 		}
 	};
 	
+	mapManager.manageMarkers = function(config){
+		var mode = {
+			highlight : function(){
+				for(var i=0, l=config.pubList.length; i<l; i++){
+					markers[config.pubList[i].id].setIcon();
+				}
+			}
+		};
+	
+		mode[config.control];	
+	};
+	
 	mapManager.init = function(config){
 		map = new google.maps.Map(config.map.element, config.map.options);
 		directionsDisplay = new google.maps.DirectionsRenderer(config.directions.options);
@@ -161,8 +175,8 @@ PC.mapManager = (function(mapManager, $, undefined){
 		geocoder = new google.maps.Geocoder();
 		directionsDisplay.setMap(map);
 		
-		var $wizardSearchBar = $('<div id="wizardSearch"><input type="text" value="Search" name="wizardSearchBar" id="wizardSearchBar"/></div>');
-		map.controls[google.maps.ControlPosition.TOP_LEFT].push($wizardSearchBar[0]);
+	/*	var $wizardSearchBar = $('<div id="wizardSearch"><input type="text" value="Search" name="wizardSearchBar" id="wizardSearchBar"/></div>');
+		map.controls[google.maps.ControlPosition.TOP_LEFT].push($wizardSearchBar[0]);*/
 
 		if (config.pubs.length > 0){
 			loadBars(config.pubs)
