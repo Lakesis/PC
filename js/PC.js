@@ -6,6 +6,7 @@ PC.core = (function(core, $, undefined){
 	step
 	;
 	
+	
 	var wizardManager = function(){
 	
 		var pubCrawl = [],
@@ -29,7 +30,7 @@ PC.core = (function(core, $, undefined){
 				latlng : new google.maps.LatLng(-33.859079,151.207838)
 			}
 		];
-		
+		core.debug = function(){console.log(pubCrawl)};
 		mediator.on('mapInitialised', function(){
 			 PC.wizard.init();
 		});
@@ -42,13 +43,16 @@ PC.core = (function(core, $, undefined){
 				}
 				if (newPub) pubCrawl.push(pubs[id]);
 			}
+			PC.mapManager.manageMarkers({control: 'select', id: id});
 			PC.mapManager.route({pubCrawl:pubCrawl, travelMode : 'WALKING'});
 			PC.wizard.updateTimeline(pubCrawl);
 		});
 		mediator.on('deletePub', function(data){
+		console.log(pubCrawl);
 			for(var i=0, l = pubCrawl.length; i<l; i++){
-					if(pubCrawl[i].id === data[0]) pubCrawl.splice(i,1) 
-				}
+				if(pubCrawl[i].id === data[0]) pubCrawl.splice(i,1) 
+			}
+			PC.mapManager.manageMarkers({control: 'remove', id: data[0]})
 			PC.mapManager.route({pubCrawl:pubCrawl, travelMode : 'WALKING'});
 			PC.wizard.updateTimeline(pubCrawl);
 		});
@@ -58,7 +62,6 @@ PC.core = (function(core, $, undefined){
 			for(var i=0, l=list.length; i<l; i++){ 
 				pubCrawl.push(pubs[list[i]]);
 			}
-			
 			PC.mapManager.route({pubCrawl:pubCrawl, travelMode : 'WALKING'});
 			PC.wizard.updateTimeline(pubCrawl);
 		});
@@ -88,7 +91,8 @@ PC.core = (function(core, $, undefined){
 			directions = {
 				options : {
 					draggable : true,
-					suppressMarkers : true
+					suppressMarkers : true,
+					preserveViewport : true
 				}
 			}
 			
@@ -134,11 +138,11 @@ PC.mapManager = (function(mapManager, $, undefined){
 			});
 		};
 		for (var i=0, l = pubs.length; i<l; i++){
-			
 			getLocationFromAddress(i);	
 			var marker = new google.maps.Marker({
 				position: pubs[i].latlng,
-				map: map
+				map: map,
+				icon : 'resources/images/pub_marker_unselected.png'
 			});
 			marker.set('id', pubs[i].id);
 			markers[pubs[i].id] = marker;
@@ -151,21 +155,27 @@ PC.mapManager = (function(mapManager, $, undefined){
 				else console.log('mediator is missing');
 			});
 			google.maps.event.addListener(marker, 'mouseover', function() {
-				// Handle over
+				this.setIcon('resources/images/pub_marker_unselected_highlight.png');
 			});
+			google.maps.event.addListener(marker, 'mouseout', function() {
+				this.setIcon('resources/images/pub_marker_unselected.png');
+			});			
 		}
 	};
 	
 	mapManager.manageMarkers = function(config){
-		var mode = {
-			highlight : function(){
-				for(var i=0, l=config.pubList.length; i<l; i++){
-					markers[config.pubList[i].id].setIcon();
-				}
-			}
-		};
 	
-		mode[config.control];	
+		var baseImageUrl = 'resources/images/pub_marker_',
+		marker = markers[config.id];
+		if(config.control === 'select') baseImageUrl += 'selected';
+		else  baseImageUrl += 'unselected';
+		marker.setIcon(baseImageUrl+'.png');
+		google.maps.event.addListener(marker, 'mouseover', function() {
+			this.setIcon(baseImageUrl+'_highlight.png');
+		});
+		google.maps.event.addListener(marker, 'mouseout', function() {
+			this.setIcon(baseImageUrl+'.png');
+		});	
 	};
 	
 	mapManager.init = function(config){
@@ -268,7 +278,7 @@ PC.wizard = (function(wizard, $, undefined){
 			else console.log('mediator is missing');
 		});
 		$(document).on("click","a.deletePub", function(e){
-			e.preventDefault();
+			e.preventDefault(); 
 			if (mediator) mediator.publish('deletePub',$(this).parent().data('id'));
 			else console.log('mediator is missing');
 		});
