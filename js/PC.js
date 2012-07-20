@@ -15,20 +15,59 @@ PC.core = (function(core, $, undefined){
 				id: 0,
 				name : 'The Australian Heritage Hotel',
 				address : '100 Cumberland Street, The Rocks NSW, Australia',
-				latlng : new google.maps.LatLng(-33.859583,151.207038)
+				latlng : new google.maps.LatLng(-33.859583,151.207038),
+				comments: 'Este bar es una mierda, pero me dejan beber hasta que pierdo el sentido de la verticalidad'
 			},
 			{
 				id: 1,
 				name : 'The Glenmore Hotel',
 				address : '96 Cumberland Street, The Rocks NSW, Australia',
-				latlng : new google.maps.LatLng(-33.858778,151.207294)
+				latlng : new google.maps.LatLng(-33.858778,151.207294),
+				comments: 'Este bar es una mierda, pero me dejan beber hasta que pierdo el sentido de la verticalidad'
 			},
 			{
 				id: 2,
 				name : 'Lowenbrau Keller',
 				address : '18 Argyle Street, The Rocks NSW, Australia',
-				latlng : new google.maps.LatLng(-33.859079,151.207838)
+				latlng : new google.maps.LatLng(-33.859079,151.207838),
+				comments: 'Este bar es una mierda, pero me dejan beber hasta que pierdo el sentido de la verticalidad'
+			},
+			{
+				id: 3,
+				name : 'Fortune of War',
+				address : '137 George Street, The Rocks NSW, Australia',
+				latlng : new google.maps.LatLng(-33.859079,151.207838),
+				comments: 'Este bar es una mierda, pero me dejan beber hasta que pierdo el sentido de la verticalidad'
+			},
+			{
+				id: 4,
+				name : 'Lord Nelson',
+				address : '19 Kent Street, The Rocks NSW, Australia',
+				latlng : new google.maps.LatLng(-33.859079,151.207838),
+				comments: 'Este bar es una mierda, pero me dejan beber hasta que pierdo el sentido de la verticalidad'
+			},
+			{
+				id: 5,
+				name : 'Observer',
+				address : '69 George Street, The Rocks NSW, Australia',
+				latlng : new google.maps.LatLng(-33.859079,151.207838),
+				comments: 'Este bar es una mierda, pero me dejan beber hasta que pierdo el sentido de la verticalidad'
+			},
+			{
+				id: 6,
+				name : 'Orient',
+				address : '89 George Street, The Rocks NSW, Australia',
+				latlng : new google.maps.LatLng(-33.859079,151.207838),
+				comments: 'Este bar es una mierda, pero me dejan beber hasta que pierdo el sentido de la verticalidad'
+			},
+			{
+				id: 7,
+				name : 'Palisade',
+				address : '35 Bettington Street, The Rocks NSW, Australia',
+				latlng : new google.maps.LatLng(-33.859079,151.207838),
+				comments: 'Este bar es una mierda, pero me dejan beber hasta que pierdo el sentido de la verticalidad'
 			}
+			
 		];
 		core.debug = function(){console.log(pubCrawl)};
 		mediator.on('mapInitialised', function(){
@@ -132,6 +171,27 @@ PC.mapManager = (function(mapManager, $, undefined){
 			geocoder.geocode( { 'address': pubs[i].address}, function(results, status) {
 				if (status == google.maps.GeocoderStatus.OK) {
 					 pubs[i].latlng = results[0].geometry.location; 
+					 var marker = new google.maps.Marker({
+						position: pubs[i].latlng,
+						map: map,
+						icon : 'resources/images/pub_marker_unselected.png'
+					});
+					marker.set('id', pubs[i].id);
+					markers[pubs[i].id] = marker;
+					google.maps.event.addListener(marker,'click', function() {
+						if (mediator) mediator.publish('displayPubDetails',this.get('id'));
+						else console.log('mediator is missing');
+					});
+					google.maps.event.addListener(marker,'dblclick', function() {
+						if (mediator) mediator.publish('addPub',this.get('id'));
+						else console.log('mediator is missing');
+					});
+					google.maps.event.addListener(marker, 'mouseover', function() {
+						this.setIcon('resources/images/pub_marker_unselected_highlight.png');
+					});
+					google.maps.event.addListener(marker, 'mouseout', function() {
+						this.setIcon('resources/images/pub_marker_unselected.png');
+					});			
 				} else {
 					console.log("Geocode was not successful for the following reason: " + status);
 				}
@@ -139,27 +199,6 @@ PC.mapManager = (function(mapManager, $, undefined){
 		};
 		for (var i=0, l = pubs.length; i<l; i++){
 			getLocationFromAddress(i);	
-			var marker = new google.maps.Marker({
-				position: pubs[i].latlng,
-				map: map,
-				icon : 'resources/images/pub_marker_unselected.png'
-			});
-			marker.set('id', pubs[i].id);
-			markers[pubs[i].id] = marker;
-			google.maps.event.addListener(marker,'click', function() {
-				if (mediator) mediator.publish('displayPubDetails',this.get('id'));
-				else console.log('mediator is missing');
-			});
-			google.maps.event.addListener(marker,'dblclick', function() {
-				if (mediator) mediator.publish('addPub',this.get('id'));
-				else console.log('mediator is missing');
-			});
-			google.maps.event.addListener(marker, 'mouseover', function() {
-				this.setIcon('resources/images/pub_marker_unselected_highlight.png');
-			});
-			google.maps.event.addListener(marker, 'mouseout', function() {
-				this.setIcon('resources/images/pub_marker_unselected.png');
-			});			
 		}
 	};
 	
@@ -301,14 +340,14 @@ PC.wizard = (function(wizard, $, undefined){
 	};
 	
 	wizard.displayPubDetails = function(pub){
-		$sidePanel.find('#pubName').text(pub.name).end().find('#pubAddress').text(pub.address);
+		$sidePanel.find('#pubName').text(pub.name).end().find('#pubAddress').text(pub.address).end().find('#comments').text(pub.comments);
 		$sidePanel.data('id',pub.id);
 		controlSidePanel('open');
 	};
 	
 	wizard.updateTimeline = function(pubCrawl){
 		var	$target = $timeline.find('ul').html(''),
-		$item = $('<li><a href="" class="deletePub">X</a><span class="pubName"></span></li>'),
+		$item = $('<li><a href="" class="deletePub"></a><span class="pubName"></span></li>'),
 		aux
 		;
 		for(var i=0, l=pubCrawl.length; i<l; i++){ 

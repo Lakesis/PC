@@ -1,8 +1,40 @@
 
-	html, body {height: 100%}
-	#wrapper {width: 1324px; margin: 0 auto; position: relative}
-	#mapContainer {height: 600px; width: 1024px; position: absolute; top: 0; left: 0; border: 1px solid black}
-	#sidePanel {height: 600px; width: 400px; position: absolute; top: 1px; right: 300px; background: white; display: none}
-	#timeline {position: absolute; top: 0; height: 600px; right: 0; border: 1px solid black; width: 300px  }
+html, body {height: 100%; background-color: #2D2D2D;}
+#wrapper {width: 100%; margin: 0 auto; position: relative; height: 100%}
+#header {width: 1020px; background: url(../resources/images/header.jpg) no-repeat; height: 123px; position: absolute; top: 0; left: 0}
+#account {width: 427px; background: url(../resources/images/account.jpg) no-repeat; height: 45px; position: absolute; top: 0; right: 0}
 
+#mapContainer {height: 83%; width: 82%; position: absolute; top: 123px; left: 0;}
+#sidePanel {height: 80%; width: 270px; position: absolute; top: 123px; right: 300px; background: white; display: none; padding: 15px;
+			h3 {margin: 0}
+			#search { margin: 20px 0; height: 36px; width: 270px; background: url(../resources/images/search.jpg) no-repeat;}
+			
+			h4 { margin: 0; font-size: 18px; text-decoration: underline}
+			h3 { margin-top: 5px; margin-bottom: 0px; padding-bottom:15px; border-bottom: 1px grey dashed; font-size: 28px;font-family: helvetica, sans-serif; }
+			
+			#pubAddress {font-size: 18px; padding: 15px 0;  margin: 0;  }
+			
+			a.addPub {display: block; background: url(../resources/images/addPub.jpg) no-repeat; height: 36px; width: 270px; margin: 10px 0}
+			
+			#pics { background: url(../resources/images/pics.jpg) 0 20px no-repeat; height: 80px; margin: 15px 0; width: 270px; padding: 20px 0; border-bottom: 1px grey dashed;border-top: 1px grey dashed;}
+			
+			#comments {font-size: 18px; padding: 15px 0;  margin: 0;}
+}
+#timeline {position: absolute; top: 123px; height: 81%; right: 0; border: 1px solid black; width: 260px; padding: 10px; color: white  }
+
+#timeline {
+	h3 {color: #E5D6CC; margin: 0; padding: 10px 0; margin-bottom: 10px; font-size: 24px;
+		span { color: white; font-size: 26px; font-family: helvetica, sans-serif;}
+	}
 	
+	ul { list-style: none; margin: 0; padding:0; border-top: 5px solid #4D4D4D; 
+		li { font-size: 18px; line-height: 35px;  border-bottom: 5px solid #4D4D4D;
+			a.deletePub {text-indent: -999em; background:none;  float: left; width: 12px; height: 35px; margin: 0 5px }
+			span.pubName{padding-right: 20px}
+		}
+		li:hover{ background: url(../resources/images/move.png) center right no-repeat;
+			a.deletePub {background: url(../resources/images/close.png) 0 10px no-repeat;}
+			
+		}
+	}
+}
